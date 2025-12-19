@@ -1,11 +1,9 @@
-// import { createBrowserRouter } from "react-router";
-
 import { createBrowserRouter } from "react-router";
-import Home from "./src/component/Home";
 import Mainlyout from "./src/Mainlyout";
-import Header from "./src/component/Header";
-import Services from "./src/component/Services";
-import Testmonial from "./src/component/Testmonial";
+import HomePage from "./src/pages/HomePage";
+import ServicesPage from "./src/pages/ServicesPage";
+import AboutPage from "./src/pages/AboutPage";
+import TestimonialsPage from "./src/pages/TestimonialsPage";
 
 export const router = createBrowserRouter([
   {
@@ -14,15 +12,23 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Home></Home>,
+        element: <HomePage />,
+      },
+      {
+        path: "/header",
+        element: <HomePage />,
       },
       {
         path: "/services",
-        element: <Services />,
+        element: <ServicesPage />,
+      },
+      {
+        path: "/about",
+        element: <AboutPage />,
       },
       {
         path: "/testmonial",
-        element: <Testmonial />,
+        element: <TestimonialsPage />,
       },
     ],
   },

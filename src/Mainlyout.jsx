@@ -6,11 +6,12 @@ import bgimage from "../src/Image/image 1.png"
 export default function MainLayout() {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isHeader = location.pathname === "/header";
 
   return (
     <div>
       {/* HOME PAGE */}
-      {isHome ? (
+      {(isHome || isHeader) ? (
         <div className="" style={{ backgroundImage: `url(${bgimage})`, backgroundSize: 'cover', backgroundPosition: 'center', minHeight: '100vh' }}>
           <Navbar />
           <div className="max-w-7xl mx-auto">

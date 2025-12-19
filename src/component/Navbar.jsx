@@ -13,6 +13,8 @@ export default function Navbar() {
   const navActive =
     pathname === "/"
       ? "Home"
+      : pathname.startsWith("/about")
+      ? "About"
       : pathname.startsWith("/services")
       ? "Services"
       : pathname.startsWith("/testmonial")
@@ -42,6 +44,14 @@ export default function Navbar() {
             }}
           >
             Home
+          </li>
+          <li
+            className={itemClass("About")}
+            onClick={() => {
+              navigate("/about");
+            }}
+          >
+            About Us
           </li>
           <li
             className={itemClass("Services")}
@@ -117,6 +127,15 @@ export default function Navbar() {
               }}
             >
               Home
+            </li>
+            <li
+              className={itemClass("About")}
+              onClick={() => {
+                navigate("/about");
+                setIsOpen(false);
+              }}
+            >
+              About Us
             </li>
             <li
               className={itemClass("Services")}
