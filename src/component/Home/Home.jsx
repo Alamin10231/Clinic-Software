@@ -1,4 +1,6 @@
 import Header from "../Header";
+import Contact from "./Contact.jsx";
+// import ContactForm from "./ContactForm.jsx";
 import TestimonialSlider from "./TestimonialSlider.jsx";
 import Treatments from "./Treatments.jsx";
 // import Treatments from "./Treatments.jsx";
@@ -22,6 +24,10 @@ export default function Home() {
       </div>
       <div>
         <TestimonialSlider></TestimonialSlider>
+      </div>
+      <div >
+        {/* <ContactForm></ContactForm> */}
+        <Contact></Contact>
       </div>
     </>
   );

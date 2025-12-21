@@ -37,7 +37,7 @@ const TestimonialSlider = () => {
   ];
 
   return (
-    <section className="bg-[#f0fdfa] py-20 px-6 overflow-visible">
+    <section className="bg-[#f0fdfa] py-20 px-6 overflow-hidden">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 items-start relative">
         {/* Left Side: Header & Navigation */}
         <div className="lg:w-1/4 w-full relative z-10">
@@ -66,7 +66,7 @@ const TestimonialSlider = () => {
         </div>
 
         {/* Right Side: Slider */}
-        <div className="lg:w-3/4 w-full lg:-ml-24 z-0">
+        <div className="lg:w-3/4 w-full z-0">
           <Swiper
             modules={[Navigation, Pagination]}
             spaceBetween={30}
@@ -77,7 +77,7 @@ const TestimonialSlider = () => {
               768: { slidesPerView: 2 },
               1024: { slidesPerView: 3 },
             }}
-            className="!overflow-visible"
+            className="overflow-hidden"
           >
             {testimonials.map((item, idx) => (
               <SwiperSlide key={idx}>
@@ -97,8 +97,8 @@ const TestimonialSlider = () => {
                         />
                       ))}
                     </div>
-                    {/* The Triangle Tip */}
-                    <div className="absolute -bottom-4 left-10 w-0 h-0 border-l-[15px] border-l-transparent border-t-[20px] border-t-[#e6f7f5] border-r-[15px] border-r-transparent"></div>
+                    {/* The Triangle Tip (kept within bubble) */}
+                    <div className="absolute bottom-4 left-10 w-0 h-0 border-l-[15px] border-l-transparent border-t-[20px] border-t-[#e6f7f5] border-r-[15px] border-r-transparent"></div>
                   </div>
 
                   {/* User Info */}
@@ -122,12 +122,7 @@ const TestimonialSlider = () => {
         </div>
       </div>
 
-      {/* Global CSS for the progress bar color */}
-      <style jsx global>{`
-        .swiper-pagination-progressbar-fill {
-          background: #003d2b !important;
-        }
-      `}</style>
+      {/* Progress bar color is defined in global CSS */}
     </section>
   );
 };

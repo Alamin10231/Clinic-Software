@@ -45,6 +45,14 @@ export default function Navbar() {
           >
             Home
           </li>
+            <li
+            className={itemClass("Services")}
+            onClick={() => {
+              navigate("/services");
+            }}
+          >
+            Services
+          </li>
           <li
             className={itemClass("About")}
             onClick={() => {
@@ -53,14 +61,7 @@ export default function Navbar() {
           >
             About Us
           </li>
-          <li
-            className={itemClass("Services")}
-            onClick={() => {
-              navigate("/services");
-            }}
-          >
-            Services
-          </li>
+        
           <li
             className={itemClass("Testmonial")}
             onClick={() => {
@@ -70,7 +71,7 @@ export default function Navbar() {
             Testmonial
           </li>
           <li
-            className={itemClass("Contact")}
+            className={itemClass("ContactForm")}
             onClick={() => {
               navigate("/contact");
             }}

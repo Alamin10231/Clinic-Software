@@ -17,3 +17,8 @@
 body{
   font-family: 'Lato', sans-serif;
 }
+
+/* Swiper progress bar color for TestimonialSlider */
+.swiper-pagination-progressbar-fill {
+  background: #003d2b !important;
+}
