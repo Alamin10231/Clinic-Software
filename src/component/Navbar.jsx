@@ -71,7 +71,7 @@ export default function Navbar() {
             Testmonial
           </li>
           <li
-            className={itemClass("ContactForm")}
+            className={itemClass("Contact")}
             onClick={() => {
               navigate("/contact");
             }}

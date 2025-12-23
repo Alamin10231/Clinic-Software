@@ -1,42 +1,66 @@
-import React from "react";
+import React, { useState } from "react";
 import { Star, Upload } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getReviews, postReviews } from "../api/api.js";
 
 export default function Testmonial() {
-  const testimonials = [
-    {
-      name: "Mitchell",
-      rating: 5,
-      text: "I highly recommend this clinic. Their evidence‑based treatments and compassionate care helped me regain strength and reduce pain.",
-      image: "https://i.pravatar.cc/80?u=mitchell",
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
+  const {
+    data: testimonialsData,
+    isLoading,
+    isError: isQueryError,
+    error: queryError,
+  } = useQuery({
+    queryKey: ["reviews", page, limit],
+    queryFn: () => getReviews(page, limit),
+    keepPreviousData: true,
+  });
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+  const API_ORIGIN = (() => {
+    try {
+      return new URL(API_BASE).origin;
+    } catch {
+      return "";
+    }
+  })();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(0);
+  const [file, setFile] = useState(null);
+
+  const { mutate, isPending, isSuccess, isError: isSubmitError } = useMutation({
+    mutationFn: postReviews,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      setName("");
+      setEmail("");
+      setComment("");
+      setRating(0);
+      setFile(null);
     },
-    {
-      name: "Sarah Angel",
-      rating: 5,
-      text: "Professional and friendly. The physiotherapists provided a clear plan and regular guidance throughout my recovery.",
-      image: "https://i.pravatar.cc/80?u=sarah-angel",
-    },
-    {
-      name: "Esther Howard",
-      rating: 4,
-      text: "Great service and modern techniques. I felt supported in every session and noticed improvement quickly.",
-      image: "https://i.pravatar.cc/80?u=esther-howard",
-    },
-    // Ghost rows to mimic the faded list in your screenshot
-    {
-      name: "Alexo Mitchell",
-      rating: 4,
-      text: "…",
-      image: "https://i.pravatar.cc/80?u=alex-1",
-      ghost: true,
-    },
-    {
-      name: "Also Mitchell",
-      rating: 5,
-      text: "…",
-      image: "https://i.pravatar.cc/80?u=alex-2",
-      ghost: true,
-    },
-  ];
+  });
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!name || !email || !comment || rating === 0) return;
+    if (file) {
+      const fd = new FormData();
+      fd.append("name", name);
+      fd.append("email", email);
+      fd.append("comment", comment);
+      fd.append("rating", String(rating));
+      fd.append("photo", file);
+      mutate(fd);
+    } else {
+      mutate({ name, email, comment, rating });
+    }
+  }
+
 
   return (
     <section className=" py-16 px-4">
@@ -61,7 +85,20 @@ export default function Testmonial() {
                 Recent Feedbacks
               </h3>
               <div className="space-y-4">
-                {testimonials.map((t, idx) => (
+                {isLoading && (
+                  <div className="text-gray-600">Loading reviews…</div>
+                )}
+                {isQueryError && (
+                  <div className="text-red-600">
+                    Failed to load reviews{queryError?.message ? `: ${queryError.message}` : "."}
+                  </div>
+                )}
+                {(Array.isArray(testimonialsData)
+                  ? testimonialsData
+                  : Array.isArray(testimonialsData?.results)
+                  ? testimonialsData.results
+                  : []
+                ).map((t, idx) => (
                   <div
                     key={idx}
                     className={
@@ -70,9 +107,16 @@ export default function Testmonial() {
                     }
                   >
                     <img
-                      src={t.image}
+                      src={`${
+                        t?.photo?.startsWith("/")
+                          ? API_ORIGIN + t.photo
+                          : t?.photo || ""
+                      }`}
                       alt={t.name}
                       className="w-12 h-12 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://via.placeholder.com/80";
+                      }}
                     />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
@@ -94,10 +138,53 @@ export default function Testmonial() {
                           ))}
                         </div>
                       </div>
-                      <p className="text-gray-600 text-sm mt-1">{t.text}</p>
+                      <p className="text-gray-600 text-sm mt-1">{t.comment}</p>
                     </div>
                   </div>
                 ))}
+                <div className="flex items-center justify-between pt-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="px-3 py-1 rounded border disabled:opacity-50"
+                      disabled={page === 1 || isLoading}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      Prev
+                    </button>
+                    <button
+                      className="px-3 py-1 rounded border disabled:opacity-50"
+                      disabled={
+                        isLoading ||
+                        ((Array.isArray(testimonialsData?.results)
+                          ? testimonialsData.results.length
+                          : Array.isArray(testimonialsData)
+                          ? testimonialsData.length
+                          : 0) < limit)
+                      }
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-600">Page {page}</div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600">Per page</label>
+                    <select
+                      className="border rounded px-2 py-1 text-sm"
+                      value={limit}
+                      onChange={(e) => {
+                        setPage(1);
+                        setLimit(Number(e.target.value));
+                      }}
+                    >
+                      {[5, 10, 15, 20].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -111,7 +198,20 @@ export default function Testmonial() {
               </label>
               <div className="flex gap-2 mb-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} size={18} className="text-gray-400" />
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setRating(i + 1)}
+                    aria-label={`Rate ${i + 1} star`}
+                  >
+                    <Star
+                      size={18}
+                      className={
+                        i + 1 <= rating ? "text-[#e67e22]" : "text-gray-400"
+                      }
+                      fill={i + 1 <= rating ? "#e67e22" : "none"}
+                    />
+                  </button>
                 ))}
               </div>
 
@@ -119,6 +219,8 @@ export default function Testmonial() {
               <label className="block text-sm text-gray-600 mb-1">Name*</label>
               <input
                 type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full border-b rounded-md h-10 px-3 bg-teal-50/40 focus:outline-none focus:ring-2 focus:ring-teal-300"
                 placeholder="Your name"
               />
@@ -129,6 +231,8 @@ export default function Testmonial() {
               </label>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full border-b rounded-md h-10 px-3 bg-teal-50/40 focus:outline-none focus:ring-2 focus:ring-teal-300"
                 placeholder="name@example.com"
               />
@@ -138,6 +242,8 @@ export default function Testmonial() {
                 Write Your Message*
               </label>
               <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
                 className="w-full border-b rounded-md min-h-[130px] p-3 bg-teal-50/40 focus:outline-none focus:ring-2 focus:ring-teal-300"
                 placeholder="Share your experience…"
               />
@@ -147,7 +253,13 @@ export default function Testmonial() {
                 Media Upload (optional)
               </label>
               <div className="border-b rounded-md bg-teal-50/40 p-3 text-center">
-                <input id="fileUpload" type="file" className="hidden" />
+                <input
+                  id="fileUpload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/jpg"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                />
                 <label
                   htmlFor="fileUpload"
                   className="inline-flex items-center gap-2 px-3 py-2 rounded-full border bg-transparent  hover:bg-bg-teal-700 border-2 border-teal-700 cursor-pointer"
@@ -155,21 +267,48 @@ export default function Testmonial() {
                   <Upload size={16} />
                   Browse Files
                 </label>
-               
               </div>
 
               {/* Actions */}
-              <div className=" items-center gap-3 mt-4">
-                 <p className="text-sm text-gray-500 mt-2">
+              <form
+                onSubmit={handleSubmit}
+                className=" items-center gap-3 mt-4"
+              >
+                <p className="text-sm text-gray-500 mt-2">
                   Only support: .jpeg, .png, and .jpg files.
                 </p>
-                <button className="px-5 py-2 my-3 mr-4 rounded-full bg-teal-600 text-white hover:bg-teal-700">
-                  Submit Now
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-5 py-2 my-3 mr-4 rounded-full bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {isPending ? "Submitting…" : "Submit Now"}
                 </button>
-                <button className="px-5 py-2 rounded-full border hover:bg-gray-50">
+                <button
+                  type="button"
+                  className="px-5 py-2 rounded-full border hover:bg-gray-50"
+                  onClick={() => {
+                    setName("");
+                    setEmail("");
+                    setComment("");
+                    setRating(0);
+                    setFile(null);
+                  }}
+                >
                   Cancel
                 </button>
-              </div>
+               
+                {isSuccess && (
+                  <div className="mt-2 text-green-700">
+                    Thanks! Your review was submitted.
+                  </div>
+                )}
+                {isSubmitError && (
+                  <div className="mt-2 text-red-700">
+                    Submission failed. Please try again.
+                  </div>
+                )}
+              </form>
             </div>
           </div>
         </div>

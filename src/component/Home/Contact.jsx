@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { postContact } from "../../api/api.js";
 import { Mail, Phone, Send } from "lucide-react";
 
 export default function Contact() {
@@ -6,15 +8,22 @@ export default function Contact() {
     name: "",
     email: "",
     phone: "",
+    subject: "",
     message: "",
   });
 
   const onChange = (field) => (e) =>
     setForm((p) => ({ ...p, [field]: e.target.value }));
+  const { mutate, isPending, isSuccess, isError, error, reset } = useMutation({
+    mutationFn: postContact,
+    onSuccess: () => {
+      setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+    },
+  });
+
   const onSubmit = (e) => {
     e.preventDefault();
-    alert("Thanks! We will get back to you soon.");
-    setForm({ name: "", email: "", phone: "", message: "" });
+    mutate(form);
   };
 
   return (
@@ -65,6 +74,18 @@ export default function Contact() {
 
             {/* Right: Form */}
             <form onSubmit={onSubmit} className="space-y-4">
+              {isSuccess && (
+                <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-md p-2 text-center">
+                  Message sent successfully. We'll get back to you soon.
+                </div>
+              )}
+              {isError && (
+                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-2 text-center">
+                  {error?.response?.data?.message ||
+                    error?.message ||
+                    "Failed to send message."}
+                </div>
+              )}
               <div>
                 <label className="text-sm font-semibold text-gray-700">
                   Name*
@@ -102,6 +123,21 @@ export default function Contact() {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">
+                  Subject
+                </label>
+                <select
+                  value={form.subject}
+                  onChange={onChange("subject")}
+                  className="w-full bg-[#D9F2EF] rounded-md h-10 px-3 outline-none focus:ring-2 focus:ring-teal-300"
+                >
+                  <option value="">Select…</option>
+                  <option value="General">General</option>
+                  <option value="Appointment">Appointment</option>
+                  <option value="Billing">Billing</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">
                   Message*
                 </label>
                 <textarea
@@ -116,14 +152,22 @@ export default function Contact() {
               <div className="flex items-center gap-3 pt-2">
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-full bg-teal-600 text-white hover:bg-teal-700 flex items-center gap-2"
+                  disabled={isPending}
+                  className="px-6 py-2 rounded-full bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Send <Send className="w-4 h-4" />
+                  {isPending ? "Sending..." : "Send"}{" "}
+                  <Send className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() =>
-                    setForm({ name: "", email: "", phone: "", message: "" })
+                    setForm({
+                      name: "",
+                      email: "",
+                      phone: "",
+                      subject: "",
+                      message: "",
+                    })
                   }
                   className="px-6 py-2 rounded-full border hover:bg-gray-50"
                 >

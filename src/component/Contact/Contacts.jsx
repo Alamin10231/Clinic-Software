@@ -1,6 +1,8 @@
 import React from "react";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { postContact } from "../../api/api.js";
 import {
   Mail,
   Phone,
@@ -45,10 +47,16 @@ export default function Contacts() {
 
   const updateField = (field, value) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
+  const { mutate, isPending, isSuccess, isError, error, reset } = useMutation({
+    mutationFn: postContact,
+    onSuccess: () => {
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    },
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`Thank you ${formData.name}! Your message has been sent.`);
-    setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    mutate(formData);
   };
 
   return (
@@ -96,6 +104,19 @@ export default function Contacts() {
                 We're here to answer your questions and assist with your
                 physiotherapy needs.
               </p>
+
+              {isSuccess && (
+                <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-md p-2 text-center">
+                  Message sent successfully. We'll get back to you soon.
+                </div>
+              )}
+              {isError && (
+                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-2 text-center">
+                  {error?.response?.data?.message ||
+                    error?.message ||
+                    "Failed to send message."}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm text-gray-600 mb-1">
@@ -146,9 +167,9 @@ export default function Contacts() {
                   className="w-full border-b rounded-md h-10 px-3 bg-[#D9F2EF] focus:outline-none focus:ring-2 focus:ring-teal-300"
                 >
                   <option value="">Select…</option>
-                  <option value="General Inquiry">General Inquiry</option>
+                  <option value="General ">General </option>
                   <option value="Appointment">Appointment</option>
-                  <option value="Therapy Plan">Therapy Plan</option>
+                  <option value="Billing">Billing</option>
                 </select>
               </div>
 
@@ -165,8 +186,12 @@ export default function Contacts() {
               </div>
 
               <div className="flex items-center gap-3">
-                <button className="px-5 py-2 rounded-full bg-teal-600 text-white hover:bg-teal-700 flex items-center gap-2">
-                  Send Message <Send className="w-4 h-4" />
+                <button
+                  disabled={isPending}
+                  className="px-5 py-2 rounded-full bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isPending ? "Sending..." : "Send Message"}{" "}
+                  <Send className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
